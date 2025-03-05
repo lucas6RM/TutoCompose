@@ -1,10 +1,11 @@
 package com.mercierlucas.tutocompose
 
-import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -29,10 +32,15 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -40,14 +48,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.mercierlucas.tutocompose.ui.theme.GrayLight
 import com.mercierlucas.tutocompose.ui.theme.TutoComposeTheme
 import kotlinx.coroutines.launch
 
@@ -205,9 +213,11 @@ fun ExoScaffold() {
 
 
 @Composable
-fun MyFirstLazyColumn() {
+fun MyFirstLazyColumn(modifierCustom: Modifier) {
     val myList = listOf("mon","tue","wed","thu","fri","sat","sun")
-    LazyColumn (Modifier.fillMaxSize()){
+    LazyColumn (
+        modifier = modifierCustom
+        ){
         items(items = myList){
             MyItemView(string = it)
         }
@@ -218,13 +228,18 @@ fun MyFirstLazyColumn() {
 fun MyItemView(string:String){
     Text(text = string,
         Modifier
-            .padding(vertical = 3.dp, horizontal = 5.dp)
-            .background(GrayLight)
+            .padding(vertical = 10.dp, horizontal = 10.dp)
+            .background(Color.Black)
             .fillMaxWidth()
-            .padding(horizontal = 2.dp, vertical = 2.dp)
-            .background(Color.Yellow)
-            .padding(horizontal = 2.dp, vertical = 2.dp)
-            .background(GrayLight)
+            .padding(horizontal = 5.dp, vertical = 5.dp)
+            .background(Color.Magenta)
+            .padding(horizontal = 5.dp, vertical = 5.dp)
+            .background(Color.White)
+            .padding(50.dp)
+            .clickable(enabled = true) {
+                println(string)
+            },
+        fontSize = 30.sp,
     )
 }
 
@@ -233,7 +248,8 @@ fun MyItemView(string:String){
 fun ExoCoil() {
     AsyncImage(
         model =ImageRequest.Builder(LocalContext.current)
-            .data("https://upload.wikimedia.org/wikipedia/commons/3/33/Mr._Bean_2011.jpg",
+            .data("https://upload.wikimedia.org/wikipedia/commons/" +
+                    "3/33/Mr._Bean_2011.jpg",
             ).crossfade(true)
             .build(),
         contentDescription = null,
@@ -243,12 +259,101 @@ fun ExoCoil() {
 }
 
 
+@Composable
+fun ExoMardiMatin() {
+    Column(
+        modifier = Modifier
+            .padding(10.dp)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+        ){
+
+        MyFirstLazyColumn(Modifier.weight(1F))
+
+        Button(
+            onClick = {},
+            modifier = Modifier.padding(vertical = 20.dp)
+        ){
+            Text(text = "Valider")
+        }
+    }
+}
+
+
+
+@Composable
+fun ExoViewModelCompteurView(compteur : Int, onClick: () -> Unit) {
+    //val viewModel : MyViewModel = viewModel()
+    //val count by viewModel.compteurLiveData.observeAsState() // en var on pourra faire un setter
+    Column (
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly
+    ){
+        Text(text = compteur.toString())
+        Button(onClick = onClick) {
+            Text(text = "+1")
+        }
+    }
+}
+
+@Composable
+fun ExoViewModelCompteurScreen(){
+    val viewModel : MyViewModel = viewModel()
+    val count by viewModel.compteurLiveData.observeAsState(0) // en var on pourra faire un setter
+    ExoViewModelCompteurView(compteur = count) { viewModel.increment() }
+
+    //equivalent
+    ExoViewModelCompteurView(compteur = count, viewModel::increment)
+}
+
+@Composable
+fun ExoStateFlowView(compteur : Int, onClick: () -> Unit) {
+    Column (
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly
+    ){
+        Text(text = compteur.toString())
+        Button(onClick = onClick) {
+            Text(text = "+1")
+        }
+    }
+}
+
+@Composable
+fun ExoStateFlowScreen(){
+    val viewModel : MyViewModel2 = viewModel()
+    val count by viewModel.compteurStateFlow.collectAsState()
+    ExoStateFlowView(compteur = count) { viewModel.increment() }
+}
+
+@Composable
+fun CompteurScreen(){
+
+    val viewModel : MyViewModel3 = viewModel()
+    val count by viewModel.compteurStateFlow.collectAsState()
+
+    ExoStateFlowView(compteur = count) { viewModel.increment() }
+
+    // gestion des events
+    val context = LocalContext.current
+    LaunchedEffect(key1 = true) {//Launched effect est une coroutine
+        // qui se déclenche que quand la valeur en paramètre change (true)
+        viewModel.goToOtherScreenSF.collect{
+            if(it)
+                Toast.makeText(context, "Changer d'écran", Toast.LENGTH_LONG).show()
+        }
+        
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     TutoComposeTheme {
         //Greeting("Youpi Android")
-       //InputWord(modifier = Modifier.background(Purple80))
+        //InputWord(modifier = Modifier.background(Purple80))
         /*CustomText(text="Hello World", color= Color.Yellow,
             Modifier
                 .padding(3.dp)
@@ -257,6 +362,11 @@ fun GreetingPreview() {
         //ExoBoxSuperposition()
         //ExoScaffold()
         //MyFirstLazyColumn()
-        ExoCoil()
+        //ExoCoil()
+        // ExoMardiMatin()
+        //ExoViewModelCompteurView(compteur = 0, {})
+        //ExoViewModelCompteurScreen()
+        //ExoStateFlowScreen()
+        CompteurScreen()
     }
 }

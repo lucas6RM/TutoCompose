@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
+
 class MyViewModel : ViewModel(){
     private val _compteurLiveData = MutableLiveData(0)
     val compteurLiveData: LiveData<Int>
